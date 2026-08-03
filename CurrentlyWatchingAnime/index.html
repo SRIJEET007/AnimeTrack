@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>NEURAL_TERMINAL - Anime Tracking System</title>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Tailwind Configuration (Preserving provided aesthetic system) -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed-dim": "#c2c7d0",
+                        "on-error-container": "#ffdad6",
+                        "secondary-container": "#454950",
+                        "on-error": "#690005",
+                        "on-secondary-fixed-variant": "#43474e",
+                        "primary-fixed-dim": "#00e639",
+                        "on-tertiary": "#2c3138",
+                        "inverse-primary": "#006e16",
+                        "secondary-fixed-dim": "#c3c6cf",
+                        "on-primary-fixed-variant": "#00530e",
+                        "outline-variant": "#3b4b37",
+                        "surface-container-high": "#222b33",
+                        "secondary-fixed": "#dfe2eb",
+                        "surface-container": "#182028",
+                        "surface-container-lowest": "#060f16",
+                        "on-primary-container": "#007117",
+                        "on-tertiary-fixed-variant": "#42474f",
+                        "surface-container-highest": "#2d363e",
+                        "tertiary": "#f8f9ff",
+                        "secondary": "#c3c6cf",
+                        "surface-container-low": "#141c24",
+                        "tertiary-container": "#d9dde7",
+                        "surface-bright": "#313a43",
+                        "primary-fixed": "#72ff70",
+                        "on-background": "#dae3ee",
+                        "outline": "#84967e",
+                        "on-secondary": "#2d3137",
+                        "surface-tint": "#00e639",
+                        "surface": "#0b141c",
+                        "on-primary": "#003907",
+                        "on-primary-fixed": "#002203",
+                        "primary-container": "#00ff41",
+                        "surface-variant": "#2d363e",
+                        "inverse-on-surface": "#29313a",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#171c23",
+                        "inverse-surface": "#dae3ee",
+                        "background": "#0b141c",
+                        "on-secondary-fixed": "#181c22",
+                        "surface-dim": "#0b141c",
+                        "on-tertiary-container": "#5c616a",
+                        "on-surface": "#dae3ee",
+                        "tertiary-fixed": "#dee2ec",
+                        "on-secondary-container": "#b5b8c1",
+                        "primary": "#ebffe2",
+                        "on-surface-variant": "#b9ccb2"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "container-max": "1440px",
+                        "margin": "24px",
+                        "gutter": "16px",
+                        "unit": "4px"
+                    },
+                    fontFamily: {
+                        "headline-md": ["JetBrains Mono"],
+                        "headline-lg": ["JetBrains Mono"],
+                        "display-lg": ["JetBrains Mono"],
+                        "body-md": ["JetBrains Mono"],
+                        "body-lg": ["JetBrains Mono"],
+                        "code-sm": ["JetBrains Mono"],
+                        "label-caps": ["JetBrains Mono"]
+                    },
+                    fontSize: {
+                        "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+                        "headline-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "600" }],
+                        "display-lg": ["48px", { lineHeight: "1.1", letterSpacing: "-0.05em", fontWeight: "700" }],
+                        "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+                        "body-lg": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "code-sm": ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+                        "label-caps": ["12px", { lineHeight: "1", letterSpacing: "0.1em", fontWeight: "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #060f16;
+            color: #ebffe2;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.25) 50%,
+                rgba(0,0,0,0.25)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+        .glow-text {
+            text-shadow: 0 0 10px rgba(0, 230, 57, 0.6);
+        }
+        .glow-box {
+            box-shadow: 0 0 15px rgba(0,230,57,0.15);
+        }
+        .hud-border {
+            border: 1px solid rgba(0, 230, 57, 0.25);
+        }
+        .hud-border-active {
+            border: 1px solid rgba(0, 230, 57, 0.85);
+            box-shadow: 0 0 12px rgba(0, 230, 57, 0.25);
+        }
+        .blinking-cursor::after {
+            content: "█";
+            animation: blink 1s step-end infinite;
+            color: #00ff41;
+            margin-left: 4px;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #060f16; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 230, 57, 0.3); 
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 230, 57, 0.8); 
+        }
+
+        .cyber-grid-bg {
+            background-image: radial-gradient(rgba(0, 230, 57, 0.1) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="font-body-md h-screen overflow-hidden flex flex-col selection:bg-primary-container selection:text-on-primary">
+    <!-- Global Scanline Overlay -->
+    <div id="scanline-overlay" class="fixed inset-0 scanlines z-50"></div>
+
+    <!-- Navigation Header -->
+    <header class="h-16 border-b border-outline-variant bg-surface-container-low/80 backdrop-blur-md flex justify-between items-center px-6 z-40 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary-fixed text-2xl animate-pulse">terminal</span>
+                <h1 class="font-headline-lg text-lg font-bold text-primary-fixed tracking-tight glow-text">NEURAL_TERMINAL</h1>
+            </div>
+            <span class="text-code-sm text-outline-variant px-2 py-0.5 border border-outline-variant/50 hidden sm:inline">V2.4_LIVE_API</span>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex gap-2">
+            <button onclick="switchTab('watching')" id="tab-watching" class="nav-tab text-label-caps px-4 py-2 flex items-center gap-2 border-b-2 border-primary-fixed text-primary-fixed bg-primary/10">
+                <span class="material-symbols-outlined text-sm">play_circle</span>
+                <span>CURRENTLY_WATCHING</span>
+                <span id="badge-watching" class="bg-primary-fixed text-on-primary-fixed text-[10px] px-1.5 py-0.2 font-bold rounded-sm">0</span>
+            </button>
+            <button onclick="switchTab('search')" id="tab-search" class="nav-tab text-label-caps px-4 py-2 flex items-center gap-2 border-b-2 border-transparent text-on-surface-variant hover:text-primary-fixed hover:bg-primary/5 transition-all">
+                <span class="material-symbols-outlined text-sm">search</span>
+                <span>DATABASE_SEARCH</span>
+            </button>
+            <button onclick="switchTab('library')" id="tab-library" class="nav-tab text-label-caps px-4 py-2 flex items-center gap-2 border-b-2 border-transparent text-on-surface-variant hover:text-primary-fixed hover:bg-primary/5 transition-all">
+                <span class="material-symbols-outlined text-sm">video_library</span>
+                <span>ALL_TARGETS</span>
+            </button>
+            <button onclick="switchTab('analytics')" id="tab-analytics" class="nav-tab text-label-caps px-4 py-2 flex items-center gap-2 border-b-2 border-transparent text-on-surface-variant hover:text-primary-fixed hover:bg-primary/5 transition-all">
+                <span class="material-symbols-outlined text-sm">insights</span>
+                <span>ANALYTICS</span>
+            </button>
+        </nav>
+
+        <!-- Right System Status & API Selector -->
+        <div class="flex items-center gap-3">
+            <!-- API Selector Dropdown -->
+            <div class="flex items-center gap-1 border border-primary/30 px-2 py-1 bg-background/60">
+                <span class="material-symbols-outlined text-xs text-primary-fixed">hub</span>
+                <span class="text-[10px] text-outline-variant hidden lg:inline">NODE:</span>
+                <select onchange="setPreferredAPI(this.value)" class="bg-transparent text-primary-fixed text-xs font-code-sm focus:outline-none cursor-pointer">
+                    <option value="AUTO" class="bg-background text-primary">AUTO FAILOVER (Jikan ➔ AniList ➔ Kitsu)</option>
+                    <option value="JIKAN" class="bg-background text-primary">JIKAN v4 (MyAnimeList)</option>
+                    <option value="ANILIST" class="bg-background text-primary">ANILIST (GraphQL)</option>
+                    <option value="KITSU" class="bg-background text-primary">KITSU (JSON:API)</option>
+                </select>
+            </div>
+
+            <button onclick="toggleScanlines()" title="Toggle Scanline FX" class="p-1 border border-outline-variant text-on-surface-variant hover:text-primary-fixed hover:border-primary/50 text-xs flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">fit_screen</span>
+            </button>
+            <button onclick="exportData()" title="Backup Watchlist JSON" class="p-1 border border-outline-variant text-on-surface-variant hover:text-primary-fixed hover:border-primary/50 text-xs flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">download</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex overflow-hidden relative">
+
+        <!-- VIEW 1: CURRENTLY WATCHING DASHBOARD -->
+        <section id="view-watching" class="flex-1 grid grid-cols-12 gap-4 p-4 overflow-y-auto cyber-grid-bg">
+            <!-- Active Hero Target Panel -->
+            <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
+                <div class="hud-border-active bg-surface-container-low/80 backdrop-blur p-4 relative glow-box" id="spotlight-card">
+                    <!-- Dynamic Hero Spotlight populated by JS -->
+                </div>
+
+                <!-- Currently Watching Grid -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex justify-between items-center border-b border-primary/20 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary-fixed">video_settings</span>
+                            <h2 class="font-headline-md text-base text-primary-fixed uppercase tracking-wider">ACTIVE_MONITORING_QUEUE</h2>
+                        </div>
+                        <span id="watching-count-label" class="font-code-sm text-outline-variant">TARGETS: 0</span>
+                    </div>
+
+                    <div id="currently-watching-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Dynamic Watching Cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Terminal Sidebar: Live Logs & Quick Add -->
+            <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
+                <!-- Quick Target Add Input -->
+                <div class="hud-border bg-surface-container-low/70 backdrop-blur p-4">
+                    <h3 class="font-code-sm text-primary-fixed mb-2 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">add_link</span> QUICK_TARGET_LOCK
+                    </h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="quick-search-input" placeholder="Type anime name (e.g. Solo Leveling)..." 
+                               onkeydown="if(event.key==='Enter') quickSearchAnime()"
+                               class="bg-background border border-primary/30 text-primary-fixed font-code-sm text-xs px-3 py-2 flex-1 focus:outline-none focus:border-primary-fixed">
+                        <button onclick="quickSearchAnime()" class="border border-primary text-primary px-3 py-2 text-xs font-label-caps hover:bg-primary/20">FETCH</button>
+                    </div>
+                    <div id="quick-results-preview" class="mt-2 space-y-1 text-xs"></div>
+                </div>
+
+                <!-- Neural Log Stream Console -->
+                <div class="hud-border bg-surface-container-low/70 backdrop-blur p-4 flex-1 flex flex-col overflow-hidden min-h-[300px]">
+                    <div class="flex justify-between items-center border-b border-primary/20 pb-2 mb-3">
+                        <span class="font-code-sm text-primary-fixed flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm text-primary-fixed">receipt_long</span> NEURAL_LOG_STREAM
+                        </span>
+                        <button onclick="clearConsoleLogs()" class="text-[10px] text-outline-variant hover:text-primary">CLEAR</button>
+                    </div>
+                    <div id="terminal-logs" class="font-code-sm text-xs text-on-surface-variant space-y-2 overflow-y-auto flex-1 pr-1">
+                        <!-- Live Event Logs -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: DATABASE SEARCH & DISCOVERY -->
+        <section id="view-search" class="hidden flex-1 flex flex-col p-4 gap-4 overflow-y-auto cyber-grid-bg">
+            <!-- Search & Filter Controls -->
+            <div class="hud-border bg-surface-container-low/80 p-4 flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div class="flex-1 flex gap-2 w-full">
+                    <span class="material-symbols-outlined text-primary-fixed flex items-center">search</span>
+                    <input type="text" id="db-search-input" onkeydown="if(event.key==='Enter') executeDatabaseSearch()" 
+                           placeholder="SEARCH ANIME DATABASE (E.G. BLEACH, ONE PIECE, DEMON SLAYER)..." 
+                           class="bg-transparent border-b border-primary/40 text-primary-fixed font-code-sm w-full focus:outline-none focus:border-primary-fixed px-2 py-1">
+                    <button onclick="executeDatabaseSearch()" class="border border-primary text-primary px-5 py-1 text-xs font-label-caps hover:bg-primary/20">SEARCH</button>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="fetchTopAiring()" class="border border-outline-variant text-on-surface-variant px-3 py-1 text-xs hover:border-primary hover:text-primary-fixed">TOP_AIRING</button>
+                    <button onclick="fetchPopular()" class="border border-outline-variant text-on-surface-variant px-3 py-1 text-xs hover:border-primary hover:text-primary-fixed">MOST_POPULAR</button>
+                </div>
+            </div>
+
+            <!-- Search Results Display Grid -->
+            <div id="db-search-results" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 overflow-y-auto flex-1 pr-1">
+                <!-- Search Result Cards -->
+            </div>
+        </section>
+
+        <!-- VIEW 3: ALL TARGETS / FULL LIBRARY -->
+        <section id="view-library" class="hidden flex-1 flex flex-col p-4 gap-4 overflow-y-auto cyber-grid-bg">
+            <!-- Library Toolbar -->
+            <div class="hud-border bg-surface-container-low/80 p-4 flex flex-wrap gap-4 justify-between items-center">
+                <!-- Status Filter Pills -->
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="filterLibrary('ALL')" id="lib-filter-all" class="lib-filter-btn px-3 py-1 border border-primary text-primary text-xs font-label-caps bg-primary/10">ALL</button>
+                    <button onclick="filterLibrary('Watching')" id="lib-filter-watching" class="lib-filter-btn px-3 py-1 border border-outline-variant text-on-surface-variant text-xs font-label-caps hover:border-primary">WATCHING</button>
+                    <button onclick="filterLibrary('Plan to Watch')" id="lib-filter-plan" class="lib-filter-btn px-3 py-1 border border-outline-variant text-on-surface-variant text-xs font-label-caps hover:border-primary">PLAN_TO_WATCH</button>
+                    <button onclick="filterLibrary('Completed')" id="lib-filter-completed" class="lib-filter-btn px-3 py-1 border border-outline-variant text-on-surface-variant text-xs font-label-caps hover:border-primary">COMPLETED</button>
+                    <button onclick="filterLibrary('Dropped')" id="lib-filter-dropped" class="lib-filter-btn px-3 py-1 border border-outline-variant text-on-surface-variant text-xs font-label-caps hover:border-primary">DROPPED</button>
+                </div>
+
+                <!-- Sort Control -->
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-outline-variant">SORT BY:</span>
+                    <select onchange="sortLibrary(this.value)" class="bg-background border border-primary/40 text-primary-fixed px-2 py-1 focus:outline-none">
+                        <option value="updated">RECENTLY UPDATED</option>
+                        <option value="title">TITLE (A-Z)</option>
+                        <option value="progress">PROGRESS</option>
+                        <option value="score">RATING SCORE</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Library Items Grid -->
+            <div id="library-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Library Cards -->
+            </div>
+        </section>
+
+        <!-- VIEW 4: ANALYTICS -->
+        <section id="view-analytics" class="hidden flex-1 flex flex-col p-4 gap-6 overflow-y-auto cyber-grid-bg">
+            <h2 class="font-headline-lg text-lg text-primary-fixed border-b border-primary/30 pb-2">NEURAL_STATS_OVERVIEW</h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="hud-border bg-surface-container-low/80 p-4">
+                    <span class="text-xs text-outline-variant">TOTAL TARGETS</span>
+                    <div id="stat-total-count" class="font-display-lg text-2xl font-bold text-primary-fixed mt-1">0</div>
+                </div>
+                <div class="hud-border bg-surface-container-low/80 p-4">
+                    <span class="text-xs text-outline-variant">CURRENTLY WATCHING</span>
+                    <div id="stat-watching-count" class="font-display-lg text-2xl font-bold text-primary-fixed mt-1">0</div>
+                </div>
+                <div class="hud-border bg-surface-container-low/80 p-4">
+                    <span class="text-xs text-outline-variant">EPISODES LOGGED</span>
+                    <div id="stat-episodes-count" class="font-display-lg text-2xl font-bold text-primary-fixed mt-1">0</div>
+                </div>
+                <div class="hud-border bg-surface-container-low/80 p-4">
+                    <span class="text-xs text-outline-variant">EST. WATCH TIME</span>
+                    <div id="stat-watch-time" class="font-display-lg text-xl font-bold text-primary-fixed mt-1">0 HRS</div>
+                </div>
+            </div>
+
+            <!-- Detailed Metrics & Status Progress -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="hud-border bg-surface-container-low/80 p-4 flex flex-col">
+                    <h3 class="font-code-sm text-primary-fixed border-b border-primary/20 pb-2 mb-4">STATUS_DISTRIBUTION</h3>
+                    <div id="analytics-status-bars" class="space-y-4 font-code-sm text-xs">
+                        <!-- Bars -->
+                    </div>
+                </div>
+
+                <div class="hud-border bg-surface-container-low/80 p-4 flex flex-col">
+                    <h3 class="font-code-sm text-primary-fixed border-b border-primary/20 pb-2 mb-4">FAVORITES & TOP RATINGS</h3>
+                    <div id="analytics-top-rated" class="space-y-3 font-code-sm text-xs">
+                        <!-- Top list -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ANIME DETAIL INSPECTION MODAL -->
+    <div id="anime-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="hud-border-active bg-surface-container-lowest border border-primary/60 w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col relative glow-box">
+            <!-- Close Button -->
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-primary-fixed hover:text-error transition-colors text-xl font-bold z-10">✕</button>
+            <div id="modal-content" class="p-6 flex flex-col gap-6">
+                <!-- Modal Dynamic Content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        // Core Storage & State
+        const STORAGE_KEY = 'NEURAL_ANIME_TRACKER_V2';
+        
+        // Initial Sample Data (Cyberpunk classic starter pack if empty)
+        const DEFAULT_WATCHLIST = [
+            {
+                id: 467,
+                title: "Ghost in the Shell: Stand Alone Complex",
+                japanese_title: "攻殻機動隊 STAND ALONE COMPLEX",
+                image_url: "https://cdn.myanimelist.net/images/anime/11/38317.jpg",
+                synopsis: "In the year 2030, cyber crime has become a serious threat. Public Security Section 9 is an elite unit established to combat cyber terrorism.",
+                episodes: 26,
+                current_ep: 14,
+                score: 8.43,
+                user_score: 9.5,
+                status: "Watching",
+                updatedAt: Date.now() - 3600000
+            },
+            {
+                id: 5081,
+                title: "Bakemonogatari",
+                japanese_title: "化物語",
+                image_url: "https://cdn.myanimelist.net/images/anime/11/75274.jpg",
+                synopsis: "Koyomi Araragi, a third-year high school student, manages to survive a vampire attack with the help of Meme Oshino.",
+                episodes: 15,
+                current_ep: 8,
+                score: 8.31,
+                user_score: 9.0,
+                status: "Watching",
+                updatedAt: Date.now() - 7200000
+            },
+            {
+                id: 30,
+                title: "Neon Genesis Evangelion",
+                japanese_title: "新世紀エヴァンゲリオン",
+                image_url: "https://cdn.myanimelist.net/images/anime/1314/142022.jpg",
+                synopsis: "In 2015, humanity stands on the brink of destruction. The fate of mankind rests in the hands of NERV and their Evangelion units.",
+                episodes: 26,
+                current_ep: 24,
+                score: 8.35,
+                user_score: 10.0,
+                status: "Watching",
+                updatedAt: Date.now() - 10800000
+            },
+            {
+                id: 50346,
+                title: "Cyberpunk: Edgerunners",
+                japanese_title: "サイバーパンク エッジランナーズ",
+                image_url: "https://cdn.myanimelist.net/images/anime/1818/126436.jpg",
+                synopsis: "A street kid trying to survive in a technology and body modification-obsessed city of the future.",
+                episodes: 10,
+                current_ep: 10,
+                score: 8.60,
+                user_score: 10.0,
+                status: "Completed",
+                updatedAt: Date.now() - 86400000
+            }
+        ];
+
+        let watchlist = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_WATCHLIST;
+        let activeSpotlightId = watchlist.find(a => a.status === 'Watching')?.id || watchlist[0]?.id || null;
+        let currentLibFilter = 'ALL';
+        let currentLibSort = 'updated';
+
+        // Utility: Local Storage Save
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(watchlist));
+            renderAll();
+        }
+
+        // Logger Function
+        function appendLog(msg, isAlert = false) {
+            const container = document.getElementById('terminal-logs');
+            if(!container) return;
+            const time = new Date().toLocaleTimeString();
+            const p = document.createElement('p');
+            if (isAlert) {
+                p.innerHTML = `<span class="text-primary-fixed font-bold">&gt;&gt; [ALERT ${time}]</span> ${msg}`;
+            } else {
+                p.className = 'opacity-70';
+                p.innerText = `[${time}] ${msg}`;
+            }
+            container.prepend(p);
+        }
+
+        function clearConsoleLogs() {
+            const container = document.getElementById('terminal-logs');
+            if(container) container.innerHTML = '';
+            appendLog('LOG BUFFER RESET.');
+        }
+
+        // Navigation Tab Switcher
+        function switchTab(tabId) {
+            ['watching', 'search', 'library', 'analytics'].forEach(id => {
+                const section = document.getElementById(`view-${id}`);
+                const tabBtn = document.getElementById(`tab-${id}`);
+                if (section) section.classList.add('hidden');
+                if (tabBtn) {
+                    tabBtn.classList.remove('border-primary-fixed', 'text-primary-fixed', 'bg-primary/10');
+                    tabBtn.classList.add('border-transparent', 'text-on-surface-variant');
+                }
+            });
+
+            const activeSection = document.getElementById(`view-${tabId}`);
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeSection) activeSection.classList.remove('hidden');
+            if (activeTab) {
+                activeTab.classList.add('border-primary-fixed', 'text-primary-fixed', 'bg-primary/10');
+                activeTab.classList.remove('border-transparent', 'text-on-surface-variant');
+            }
+
+            if (tabId === 'search') {
+                const searchInput = document.getElementById('db-search-input');
+                if (searchInput && !searchInput.value) {
+                    fetchTopAiring();
+                }
+            }
+
+            appendLog(`CONTEXT SWITCH: Tab [${tabId.toUpperCase()}] mounted.`);
+        }
+
+        // Rendering Master Function
+        function renderAll() {
+            renderWatchingQueue();
+            renderSpotlightCard();
+            renderLibraryGrid();
+            renderAnalytics();
+            updateBadges();
+        }
+
+        function updateBadges() {
+            const watchingCount = watchlist.filter(a => a.status === 'Watching').length;
+            document.getElementById('badge-watching').innerText = watchingCount;
+            document.getElementById('watching-count-label').innerText = `TARGETS: ${watchingCount}`;
+        }
+
+        // RENDER 1: Hero Spotlight Target Card
+        function renderSpotlightCard() {
+            const container = document.getElementById('spotlight-card');
+            if(!container) return;
+
+            const target = watchlist.find(a => a.id === activeSpotlightId) || watchlist.find(a => a.status === 'Watching') || watchlist[0];
+            if(!target) {
+                container.innerHTML = `<div class="p-8 text-center text-outline-variant font-code-sm">NO TARGET LOCKED. USE SEARCH TO ADD ANIMES.</div>`;
+                return;
+            }
+
+            const totalEp = target.episodes || 0;
+            const currentEp = target.current_ep || 0;
+            const progressPct = totalEp ? Math.min(100, Math.round((currentEp / totalEp) * 100)) : 0;
+
+            container.innerHTML = `
+                <div class="absolute top-2 right-2 font-code-sm text-xs text-primary/60 bg-background/90 px-2 py-0.5 border border-primary/30 z-10">
+                    TARGET_ID: MAL-${target.id}
+                </div>
+                
+                <div class="flex flex-col md:flex-row gap-6 relative">
+                    <div class="w-full md:w-48 h-64 shrink-0 overflow-hidden hud-border relative group">
+                        <img src="${target.image_url}" class="w-full h-full object-cover filter contrast-110 brightness-90 group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+                        <button onclick="openModal(${target.id})" class="absolute bottom-2 left-2 right-2 bg-primary/20 hover:bg-primary-fixed hover:text-on-primary-fixed text-primary-fixed border border-primary text-xs py-1 transition-colors flex items-center justify-center gap-1 font-label-caps">
+                            <span class="material-symbols-outlined text-sm">info</span> INSPECT_METADATA
+                        </button>
+                    </div>
+
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="text-xs px-2 py-0.5 border border-primary/40 text-primary-fixed font-bold bg-primary/10">STATUS: ${target.status.toUpperCase()}</span>
+                                <span class="text-xs px-2 py-0.5 border border-outline-variant text-on-surface-variant">RATING: ${target.user_score ? target.user_score + '/10' : 'UNRATED'}</span>
+                                <span class="text-xs px-2 py-0.5 border border-outline-variant text-on-surface-variant">MAL SCORE: ${target.score || 'N/A'}</span>
+                            </div>
+                            
+                            <h2 class="font-display-lg text-xl md:text-2xl font-bold text-primary-fixed glow-text uppercase leading-tight mt-2 mb-1 cursor-pointer" onclick="openModal(${target.id})">${target.title}</h2>
+                            <p class="font-code-sm text-xs text-primary-fixed-dim opacity-80 mb-3">${target.japanese_title || ''}</p>
+                            
+                            <p class="font-body-md text-xs text-on-surface-variant line-clamp-3 text-justify leading-relaxed">
+                                <span class="text-primary-fixed font-bold">&gt; SYNOPSIS_STREAM:</span> ${target.synopsis || 'No decryption synopsis data cached.'}
+                            </p>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-dashed border-outline-variant/60">
+                            <div class="flex justify-between font-code-sm text-xs text-primary-fixed-dim mb-1">
+                                <span>EPISODE MONITORING //</span>
+                                <span class="font-bold">${currentEp} / ${totalEp || '?'} EPS (${progressPct}%)</span>
+                            </div>
+
+                            <div class="w-full h-2.5 bg-surface-container-high border border-primary/30 mb-3 overflow-hidden">
+                                <div class="h-full bg-primary-fixed glow-box transition-all duration-300" style="width: ${progressPct}%"></div>
+                            </div>
+
+                            <!-- Interactive Quick Progress Controls -->
+                            <div class="flex flex-wrap gap-2 items-center text-xs">
+                                <button onclick="quickIncrementEp(${target.id}, 1)" class="border border-primary text-primary px-3 py-1 hover:bg-primary/20 font-bold text-xs flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-sm">add</span> +1 EPISODE
+                                </button>
+                                <button onclick="quickIncrementEp(${target.id}, -1)" class="border border-outline-variant text-on-surface-variant px-3 py-1 hover:bg-primary/10 text-xs">
+                                    -1 EP
+                                </button>
+
+                                <select onchange="updateAnimeStatus(${target.id}, this.value)" class="bg-background border border-primary/40 text-primary-fixed font-code-sm px-2 py-1 focus:outline-none text-xs">
+                                    <option value="Watching" ${target.status==='Watching'?'selected':''}>WATCHING</option>
+                                    <option value="Plan to Watch" ${target.status==='Plan to Watch'?'selected':''}>PLAN TO WATCH</option>
+                                    <option value="Completed" ${target.status==='Completed'?'selected':''}>COMPLETED</option>
+                                    <option value="Dropped" ${target.status==='Dropped'?'selected':''}>DROPPED</option>
+                                </select>
+
+                                <button onclick="deleteAnimeTarget(${target.id})" class="ml-auto border border-error/40 text-error px-2 py-1 hover:bg-error/20 text-xs">PURGE</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // RENDER 2: Currently Watching Grid
+        function renderWatchingQueue() {
+            const container = document.getElementById('currently-watching-grid');
+            if (!container) return;
+
+            const watchingList = watchlist.filter(a => a.status === 'Watching');
+
+            if (watchingList.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full hud-border p-6 text-center text-outline-variant font-code-sm text-xs">
+                        NO ACTIVE WATCHING TARGETS. SEARCH AND ADD ANIMES TO YOUR QUEUE!
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = watchingList.map(item => {
+                const totalEp = item.episodes || 0;
+                const currentEp = item.current_ep || 0;
+                const pct = totalEp ? Math.min(100, Math.round((currentEp / totalEp) * 100)) : 0;
+                const isSelected = item.id === activeSpotlightId;
+
+                return `
+                    <div class="hud-border bg-surface-container-low/80 p-3 flex gap-3 hover:border-primary/60 transition-all cursor-pointer ${isSelected ? 'hud-border-active bg-primary/5' : ''}"
+                         onclick="setSpotlight(${item.id})">
+                        <img src="${item.image_url}" class="w-16 h-24 object-cover border border-outline-variant shrink-0">
+                        
+                        <div class="flex flex-col justify-between flex-1 overflow-hidden">
+                            <div>
+                                <h3 class="font-headline-md text-sm text-primary-fixed truncate">${item.title}</h3>
+                                <p class="text-[10px] text-outline-variant truncate">${item.japanese_title || ''}</p>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-[11px] font-code-sm text-primary-fixed-dim mb-1">
+                                    <span>EP: ${currentEp}/${totalEp || '?'}</span>
+                                    <span>${pct}%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-surface-container-high border border-primary/20 mb-2">
+                                    <div class="h-full bg-primary-fixed" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2" onclick="event.stopPropagation()">
+                                <button onclick="quickIncrementEp(${item.id}, 1)" class="border border-primary/50 text-primary-fixed text-[11px] px-2 py-0.5 hover:bg-primary/20 flex-1">+1 EP</button>
+                                <button onclick="openModal(${item.id})" class="border border-outline-variant text-on-surface-variant text-[11px] px-2 py-0.5 hover:border-primary">DETAILS</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // RENDER 3: Library View Grid
+        function renderLibraryGrid() {
+            const container = document.getElementById('library-grid');
+            if(!container) return;
+
+            let filtered = watchlist.filter(a => {
+                if (currentLibFilter === 'ALL') return true;
+                return a.status === currentLibFilter;
+            });
+
+            // Sorting logic
+            filtered.sort((a, b) => {
+                if (currentLibSort === 'title') return a.title.localeCompare(b.title);
+                if (currentLibSort === 'progress') return (b.current_ep || 0) - (a.current_ep || 0);
+                if (currentLibSort === 'score') return (b.user_score || b.score || 0) - (a.user_score || a.score || 0);
+                return (b.updatedAt || 0) - (a.updatedAt || 0);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full hud-border p-8 text-center text-outline-variant font-code-sm text-xs">NO TARGETS MATCHING FILTER [${currentLibFilter}].</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => `
+                <div class="hud-border bg-surface-container-low/80 p-3 flex flex-col justify-between gap-3 hover:border-primary/60 transition-all">
+                    <div class="flex gap-3">
+                        <img src="${item.image_url}" class="w-20 h-28 object-cover border border-outline-variant shrink-0">
+                        <div class="flex flex-col justify-between flex-1 overflow-hidden">
+                            <div>
+                                <span class="text-[9px] px-1.5 py-0.5 border border-primary/30 text-primary-fixed uppercase font-bold">${item.status}</span>
+                                <h3 class="font-headline-md text-xs text-primary-fixed truncate mt-1">${item.title}</h3>
+                                <p class="text-[10px] text-outline-variant truncate">${item.japanese_title || ''}</p>
+                            </div>
+                            <div class="font-code-sm text-xs text-primary-fixed-dim">
+                                EP: ${item.current_ep || 0} / ${item.episodes || '?'}
+                            </div>
+                            <div class="text-[10px] text-outline-variant">
+                                RATING: ${item.user_score ? item.user_score + '/10' : 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 border-t border-outline-variant/40 pt-2 text-xs">
+                        <button onclick="quickIncrementEp(${item.id}, 1)" class="border border-primary/40 text-primary-fixed px-2 py-1 flex-1 hover:bg-primary/20">+1 EP</button>
+                        <button onclick="openModal(${item.id})" class="border border-outline-variant text-on-surface-variant px-2 py-1 flex-1 hover:border-primary">EDIT</button>
+                        <button onclick="deleteAnimeTarget(${item.id})" class="border border-error/40 text-error px-2 py-1 hover:bg-error/20">PURGE</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // RENDER 4: Analytics
+        function renderAnalytics() {
+            document.getElementById('stat-total-count').innerText = watchlist.length;
+            const watching = watchlist.filter(a => a.status === 'Watching').length;
+            document.getElementById('stat-watching-count').innerText = watching;
+
+            const totalEps = watchlist.reduce((sum, item) => sum + (parseInt(item.current_ep) || 0), 0);
+            document.getElementById('stat-episodes-count').innerText = totalEps;
+
+            // Approx 24 min per ep = 0.4 hours per ep
+            const totalHours = Math.round(totalEps * 0.4);
+            document.getElementById('stat-watch-time').innerText = `${totalHours} HRS`;
+
+            // Status Distribution Bars
+            const statusContainer = document.getElementById('analytics-status-bars');
+            const statuses = ['Watching', 'Plan to Watch', 'Completed', 'Dropped'];
+            
+            if (statusContainer) {
+                statusContainer.innerHTML = statuses.map(st => {
+                    const count = watchlist.filter(a => a.status === st).length;
+                    const pct = watchlist.length ? Math.round((count / watchlist.length) * 100) : 0;
+                    return `
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span>${st.toUpperCase()}</span>
+                                <span class="text-primary-fixed">${count} TARGETS (${pct}%)</span>
+                            </div>
+                            <div class="w-full h-2 bg-surface-container-high border border-primary/20">
+                                <div class="h-full bg-primary-fixed" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Top Rated List
+            const topContainer = document.getElementById('analytics-top-rated');
+            if (topContainer) {
+                const sorted = [...watchlist].sort((a,b) => (b.user_score || b.score || 0) - (a.user_score || a.score || 0)).slice(0, 5);
+                topContainer.innerHTML = sorted.map((item, idx) => `
+                    <div class="flex justify-between items-center border-b border-outline-variant/30 pb-1">
+                        <span class="truncate max-w-[240px] text-on-surface-variant">#${idx+1} ${item.title}</span>
+                        <span class="text-primary-fixed font-bold">${item.user_score ? item.user_score + '/10' : item.score + ' (MAL)'}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Actions: Operations on Watchlist
+        function setSpotlight(id) {
+            activeSpotlightId = id;
+            renderSpotlightCard();
+            renderWatchingQueue();
+        }
+
+        function quickIncrementEp(id, delta) {
+            const item = watchlist.find(a => a.id === id);
+            if (!item) return;
+
+            const max = item.episodes || 9999;
+            const oldEp = item.current_ep || 0;
+            item.current_ep = Math.max(0, Math.min(max, oldEp + delta));
+            item.updatedAt = Date.now();
+
+            if (item.episodes && item.current_ep === item.episodes) {
+                item.status = 'Completed';
+                appendLog(`STATUS TRIGGER: Target [${item.title}] marked as COMPLETED!`, true);
+            } else {
+                appendLog(`EPISODE UPDATED: [${item.title}] Ep ${oldEp} -&gt; Ep ${item.current_ep}`);
+            }
+
+            saveState();
+        }
+
+        function updateAnimeStatus(id, newStatus) {
+            const item = watchlist.find(a => a.id === id);
+            if (item) {
+                item.status = newStatus;
+                if (newStatus === 'Completed' && item.episodes > 0) {
+                    item.current_ep = item.episodes;
+                    appendLog(`AUTO-PROGRESS: [${item.title}] marked COMPLETED. Episodes set to ${item.episodes}/${item.episodes}`, true);
+                } else {
+                    appendLog(`STATUS MUTATION: [${item.title}] set to [${newStatus.toUpperCase()}]`);
+                }
+                item.updatedAt = Date.now();
+                saveState();
+            }
+        }
+
+        function deleteAnimeTarget(id) {
+            const item = watchlist.find(a => a.id === id);
+            if (!item) return;
+
+            if (confirm(`PURGE TARGET [${item.title}] FROM NEURAL TERMINAL?`)) {
+                watchlist = watchlist.filter(a => a.id !== id);
+                if (activeSpotlightId === id) {
+                    activeSpotlightId = watchlist[0]?.id || null;
+                }
+                appendLog(`TARGET PURGED: [${item.title}] removed from database.`, true);
+                saveState();
+            }
+        }
+
+        function filterLibrary(filter) {
+            currentLibFilter = filter;
+            document.querySelectorAll('.lib-filter-btn').forEach(btn => {
+                btn.classList.remove('border-primary', 'text-primary', 'bg-primary/10');
+                btn.classList.add('border-outline-variant', 'text-on-surface-variant');
+            });
+            const activeBtn = document.getElementById(`lib-filter-${filter.toLowerCase().replace(/ /g, '')}`);
+            if (activeBtn) {
+                activeBtn.classList.add('border-primary', 'text-primary', 'bg-primary/10');
+                activeBtn.classList.remove('border-outline-variant', 'text-on-surface-variant');
+            }
+            renderLibraryGrid();
+        }
+
+        function sortLibrary(sortBy) {
+            currentLibSort = sortBy;
+            renderLibraryGrid();
+        }
+
+        // MULTI-API FAILOVER SYSTEM (JIKAN -> ANILIST -> KITSU)
+        let preferredAPI = 'AUTO'; // 'AUTO', 'JIKAN', 'ANILIST', 'KITSU'
+
+        function setPreferredAPI(provider) {
+            preferredAPI = provider;
+            appendLog(`API ROUTER MUTATION: Preferred provider set to [${provider}]`);
+        }
+
+        // 1. Jikan API Provider
+        async function fetchJikanSearch(query) {
+            const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=15&sfw=true`);
+            if (!res.ok) throw new Error(`Jikan API HTTP ${res.status}`);
+            const data = await res.json();
+            return data.data.map(item => ({
+                id: item.mal_id,
+                title: item.title,
+                japanese_title: item.title_japanese || '',
+                image_url: item.images?.jpg?.large_image_url || item.images?.jpg?.image_url,
+                synopsis: item.synopsis || '',
+                episodes: item.episodes || 0,
+                score: item.score || 'N/A',
+                provider: 'JIKAN'
+            }));
+        }
+
+        // 2. AniList GraphQL Provider
+        async function fetchAniListSearch(query) {
+            const gqlQuery = `
+            query ($search: String) {
+              Page(perPage: 15) {
+                media(search: $search, type: ANIME) {
+                  id
+                  title { romaji english native }
+                  coverImage { extraLarge large }
+                  description(asHtml: false)
+                  episodes
+                  averageScore
+                }
+              }
+            }`;
+            const res = await fetch('https://graphql.anilist.co', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ query: gqlQuery, variables: { search: query } })
+            });
+            if (!res.ok) throw new Error(`AniList API HTTP ${res.status}`);
+            const data = await res.json();
+            return data.data.Page.media.map(item => ({
+                id: item.id,
+                title: item.title.english || item.title.romaji,
+                japanese_title: item.title.native || '',
+                image_url: item.coverImage.extraLarge || item.coverImage.large,
+                synopsis: item.description ? item.description.replace(/<[^>]*>?/gm, '') : '',
+                episodes: item.episodes || 0,
+                score: item.averageScore ? (item.averageScore / 10).toFixed(1) : 'N/A',
+                provider: 'ANILIST'
+            }));
+        }
+
+        // 3. Kitsu JSON:API Provider
+        async function fetchKitsuSearch(query) {
+            const res = await fetch(`https://kitsu.io/api/edge/anime?filter[text]=${encodeURIComponent(query)}&page[limit]=15`, {
+                headers: { 'Accept': 'application/vnd.api+json', 'Content-Type': 'application/vnd.api+json' }
+            });
+            if (!res.ok) throw new Error(`Kitsu API HTTP ${res.status}`);
+            const data = await res.json();
+            return data.data.map(item => ({
+                id: `kitsu-${item.id}`,
+                title: item.attributes.canonicalTitle || item.attributes.titles.en || item.attributes.titles.en_jp,
+                japanese_title: item.attributes.titles.ja_jp || '',
+                image_url: item.attributes.posterImage?.large || item.attributes.posterImage?.medium,
+                synopsis: item.attributes.synopsis || '',
+                episodes: item.attributes.episodeCount || 0,
+                score: item.attributes.averageRating ? (parseFloat(item.attributes.averageRating) / 10).toFixed(1) : 'N/A',
+                provider: 'KITSU'
+            }));
+        }
+
+        // Unified Multi-API Search with Automatic Failover
+        async function executeDatabaseSearch() {
+            const query = document.getElementById('db-search-input').value.trim();
+            if(!query) return;
+
+            const resultsContainer = document.getElementById('db-search-results');
+            resultsContainer.innerHTML = `<div class="col-span-full font-code-sm text-primary-fixed blinking-cursor text-xs p-4">&gt; SCANNING GLOBAL ANIME DATABASE MATRIX FOR [${query.toUpperCase()}]...</div>`;
+
+            const providers = preferredAPI === 'AUTO' 
+                ? [fetchJikanSearch, fetchAniListSearch, fetchKitsuSearch]
+                : preferredAPI === 'JIKAN' ? [fetchJikanSearch, fetchAniListSearch, fetchKitsuSearch]
+                : preferredAPI === 'ANILIST' ? [fetchAniListSearch, fetchJikanSearch, fetchKitsuSearch]
+                : [fetchKitsuSearch, fetchJikanSearch, fetchAniListSearch];
+
+            let lastError = null;
+
+            for (const fetcher of providers) {
+                try {
+                    const results = await fetcher(query);
+                    const providerName = results[0]?.provider || 'MATRIX';
+                    renderSearchResults(results);
+                    appendLog(`SEARCH SUCCESS: Loaded ${results.length} targets via [${providerName}]`, true);
+                    return;
+                } catch (err) {
+                    lastError = err;
+                    appendLog(`API FAILOVER TRIGGER: ${err.message}. Retrying next open API node...`, true);
+                }
+            }
+
+            resultsContainer.innerHTML = `<div class="col-span-full font-code-sm text-error text-xs p-4">&gt; ALL ANIME MATRIX APIS DOWN / RATE LIMITED: ${lastError?.message}</div>`;
+        }
+
+        async function fetchTopAiring() {
+            const resultsContainer = document.getElementById('db-search-results');
+            resultsContainer.innerHTML = `<div class="col-span-full font-code-sm text-primary-fixed blinking-cursor text-xs p-4">&gt; FETCHING CURRENTLY AIRING TOP ANIME TARGETS...</div>`;
+
+            try {
+                const results = await fetchJikanSearch('popular');
+                renderSearchResults(results);
+                appendLog('FETCHED SEASONAL TOP AIRING ANIME');
+            } catch (err) {
+                try {
+                    const results = await fetchAniListSearch('popular');
+                    renderSearchResults(results);
+                    appendLog('FAILOVER SUCCESS: Fetched Top Airing via AniList', true);
+                } catch(e2) {
+                    resultsContainer.innerHTML = `<div class="col-span-full text-error text-xs p-4">&gt; ERROR: ${e2.message}</div>`;
+                }
+            }
+        }
+
+        async function fetchPopular() {
+            fetchTopAiring();
+        }
+
+        function renderSearchResults(animeList) {
+            const container = document.getElementById('db-search-results');
+            if (!animeList || animeList.length === 0) {
+                container.innerHTML = `<div class="col-span-full font-code-sm text-outline-variant text-xs p-4">NO MATCHING TARGETS FOUND IN ANIME MATRIX.</div>`;
+                return;
+            }
+
+            container.innerHTML = animeList.map(anime => {
+                const isTracked = watchlist.some(a => a.id === anime.id || a.title.toLowerCase() === anime.title.toLowerCase());
+                return `
+                    <div class="hud-border bg-surface-container-low/80 p-3 flex flex-col justify-between hover:border-primary/60 transition-all">
+                        <div>
+                            <div class="h-44 overflow-hidden mb-2 relative group border border-outline-variant">
+                                <img src="${anime.image_url}" class="w-full h-full object-cover filter contrast-105">
+                                <div class="absolute bottom-1 right-1 bg-background/90 text-primary-fixed text-[10px] px-1 border border-primary/30">
+                                    SCORE: ${anime.score}
+                                </div>
+                                <div class="absolute top-1 left-1 bg-primary/20 text-primary-fixed text-[9px] px-1 border border-primary/40">
+                                    ${anime.provider}
+                                </div>
+                            </div>
+                            <h3 class="font-headline-md text-xs text-primary-fixed truncate">${anime.title}</h3>
+                            <p class="text-[10px] text-outline-variant truncate mb-2">${anime.japanese_title || ''}</p>
+                            <p class="text-[11px] text-on-surface-variant line-clamp-3 leading-tight mb-2">${anime.synopsis || 'No description cached.'}</p>
+                        </div>
+
+                        <div class="pt-2 border-t border-outline-variant/40 flex justify-between items-center">
+                            <span class="text-[10px] text-primary-fixed-dim">EPS: ${anime.episodes || '?'}</span>
+                            ${isTracked ? 
+                                `<span class="text-[10px] text-outline-variant font-bold">[TRACKED]</span>` :
+                                `<button onclick="addDirectAnimeObject(${JSON.stringify(anime).replace(/"/g, '&quot;')})" class="border border-primary text-primary-fixed text-[11px] px-2 py-0.5 hover:bg-primary/20 font-bold">+ ADD TARGET</button>`
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addDirectAnimeObject(animeObj) {
+            if (watchlist.some(a => a.id === animeObj.id)) return;
+
+            const newItem = {
+                id: animeObj.id,
+                title: animeObj.title,
+                japanese_title: animeObj.japanese_title || '',
+                image_url: animeObj.image_url,
+                synopsis: animeObj.synopsis || '',
+                episodes: animeObj.episodes || 0,
+                current_ep: 0,
+                score: animeObj.score !== 'N/A' ? parseFloat(animeObj.score) : 0,
+                user_score: null,
+                status: 'Watching',
+                updatedAt: Date.now()
+            };
+
+            watchlist.unshift(newItem);
+            activeSpotlightId = newItem.id;
+            appendLog(`NEW TARGET LOCKED: [${newItem.title}] via [${animeObj.provider}]`, true);
+            saveState();
+
+            const searchInput = document.getElementById('db-search-input');
+            if (searchInput && searchInput.value) {
+                executeDatabaseSearch();
+            }
+        }
+
+        async function addAnimeFromAPI(malId) {
+            if (watchlist.some(a => a.id === malId)) return;
+
+            appendLog(`LOCKING TARGET MAL-${malId}...`);
+            try {
+                const data = await fetchJikanAPI(`anime/${malId}`);
+                const anime = data.data;
+
+                const newItem = {
+                    id: anime.mal_id,
+                    title: anime.title,
+                    japanese_title: anime.title_japanese || '',
+                    image_url: anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url,
+                    synopsis: anime.synopsis || '',
+                    episodes: anime.episodes || 0,
+                    current_ep: 0,
+                    score: anime.score || 0,
+                    user_score: null,
+                    status: 'Watching',
+                    updatedAt: Date.now()
+                };
+
+                watchlist.unshift(newItem);
+                activeSpotlightId = newItem.id;
+                appendLog(`NEW TARGET LOCKED: [${newItem.title}] added to Currently Watching!`, true);
+                saveState();
+                
+                // Re-render search results if on search page
+                const searchInput = document.getElementById('db-search-input');
+                if (searchInput && searchInput.value) {
+                    executeDatabaseSearch();
+                }
+            } catch (err) {
+                appendLog(`ADD TARGET FAILED: ${err.message}`, true);
+            }
+        }
+
+        // Quick Search Sidebar Handler
+        async function quickSearchAnime() {
+            const val = document.getElementById('quick-search-input').value.trim();
+            if(!val) return;
+            const container = document.getElementById('quick-results-preview');
+            container.innerHTML = `<div class="text-primary-fixed text-[10px]">Scanning Jikan API...</div>`;
+
+            try {
+                const res = await fetchJikanAPI(`anime?q=${encodeURIComponent(val)}&limit=3&sfw=true`);
+                if (!res.data || res.data.length === 0) {
+                    container.innerHTML = `<div class="text-outline-variant text-[10px]">No results found.</div>`;
+                    return;
+                }
+
+                container.innerHTML = res.data.map(item => `
+                    <div class="flex justify-between items-center bg-background/80 p-1 border border-primary/20 hover:border-primary">
+                        <span class="truncate text-[11px] text-on-surface-variant max-w-[170px]">${item.title}</span>
+                        <button onclick="addAnimeFromAPI(${item.mal_id})" class="text-[10px] text-primary-fixed border border-primary px-1 hover:bg-primary/20">+ ADD</button>
+                    </div>
+                `).join('');
+            } catch(e) {
+                container.innerHTML = `<div class="text-error text-[10px]">Error fetching data.</div>`;
+            }
+        }
+
+        // ANIME INSPECTION MODAL
+        async function openModal(id) {
+            const modal = document.getElementById('anime-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('hidden');
+
+            const item = watchlist.find(a => a.id === id);
+            content.innerHTML = `<div class="text-primary-fixed font-code-sm blinking-cursor">&gt; DECRYPTING DETAILED TARGET ARCHIVES FOR ID:${id}...</div>`;
+
+            let apiData = null;
+            try {
+                const res = await fetchJikanAPI(`anime/${id}`);
+                apiData = res.data;
+            } catch(e) {
+                console.warn('Could not fetch full API details for modal', e);
+            }
+
+            const title = item ? item.title : (apiData ? apiData.title : 'Unknown Target');
+            const img = item ? item.image_url : (apiData ? apiData.images.jpg.large_image_url : '');
+            const synopsis = apiData ? apiData.synopsis : (item ? item.synopsis : 'No synopsis available.');
+            const currentEp = item ? item.current_ep : 0;
+            const totalEp = item ? item.episodes : (apiData ? apiData.episodes : '?');
+            const status = item ? item.status : 'Watching';
+            const userScore = item ? (item.user_score || '') : '';
+
+            content.innerHTML = `
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-56 shrink-0 flex flex-col gap-3">
+                        <img src="${img}" class="w-full h-80 object-cover border border-primary/40 glow-box">
+                        
+                        <div class="hud-border bg-background p-3 text-xs space-y-1 font-code-sm">
+                            <div class="text-primary-fixed font-bold border-b border-primary/20 pb-1 mb-1">METADATA</div>
+                            <div>SCORE: <span class="text-primary-fixed">${apiData?.score || item?.score || 'N/A'}</span></div>
+                            <div>RANK: <span class="text-primary-fixed">#${apiData?.rank || 'N/A'}</span></div>
+                            <div>POPULARITY: <span class="text-primary-fixed">#${apiData?.popularity || 'N/A'}</span></div>
+                            <div>TYPE: <span class="text-primary-fixed">${apiData?.type || 'TV'}</span></div>
+                            <div>STATUS: <span class="text-primary-fixed">${apiData?.status || 'Airing'}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div>
+                            <h2 class="font-display-lg text-2xl font-bold text-primary-fixed glow-text uppercase mb-1">${title}</h2>
+                            <p class="font-code-sm text-xs text-outline-variant mb-4">${apiData?.title_japanese || item?.japanese_title || ''}</p>
+
+                            <!-- Genres Tags -->
+                            ${apiData?.genres ? `
+                                <div class="flex gap-1.5 flex-wrap mb-4">
+                                    ${apiData.genres.map(g => `<span class="text-[10px] border border-primary/30 text-primary-fixed px-2 py-0.5 bg-primary/5">${g.name.toUpperCase()}</span>`).join('')}
+                                </div>
+                            ` : ''}
+
+                            <div class="font-body-md text-xs text-on-surface-variant leading-relaxed text-justify mb-6">
+                                <span class="text-primary-fixed font-bold">&gt; SYNOPSIS_DECRYPT:</span><br>
+                                ${synopsis}
+                            </div>
+                        </div>
+
+                        <!-- Update Controls inside Modal -->
+                        <div class="hud-border bg-background p-4 text-xs space-y-4">
+                            <h3 class="font-code-sm text-primary-fixed font-bold border-b border-primary/20 pb-1">TARGET_PROGRESS_EDIT</h3>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-outline-variant mb-1">CURRENT EPISODE</label>
+                                    <input type="number" min="0" max="${totalEp || 9999}" value="${currentEp}" 
+                                           onchange="updateModalEp(${id}, this.value)"
+                                           class="w-full bg-surface-container border border-primary/40 text-primary-fixed font-code-sm px-2 py-1 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-outline-variant mb-1">WATCH STATUS</label>
+                                    <select onchange="updateAnimeStatus(${id}, this.value); openModal(${id});" class="w-full bg-surface-container border border-primary/40 text-primary-fixed font-code-sm px-2 py-1 focus:outline-none">
+                                        <option value="Watching" ${status==='Watching'?'selected':''}>WATCHING</option>
+                                        <option value="Plan to Watch" ${status==='Plan to Watch'?'selected':''}>PLAN TO WATCH</option>
+                                        <option value="Completed" ${status==='Completed'?'selected':''}>COMPLETED</option>
+                                        <option value="Dropped" ${status==='Dropped'?'selected':''}>DROPPED</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-outline-variant mb-1">MY RATING (1-10)</label>
+                                    <input type="number" min="1" max="10" step="0.5" value="${userScore}" 
+                                           onchange="updateModalRating(${id}, this.value)"
+                                           placeholder="e.g. 9.5"
+                                           class="w-full bg-surface-container border border-primary/40 text-primary-fixed font-code-sm px-2 py-1 focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('anime-modal').classList.add('hidden');
+        }
+
+        function updateModalEp(id, val) {
+            const item = watchlist.find(a => a.id === id);
+            if(item) {
+                item.current_ep = parseInt(val) || 0;
+                item.updatedAt = Date.now();
+                saveState();
+            }
+        }
+
+        function updateModalRating(id, val) {
+            const item = watchlist.find(a => a.id === id);
+            if(item) {
+                item.user_score = parseFloat(val) || null;
+                item.updatedAt = Date.now();
+                saveState();
+            }
+        }
+
+        // Export Data Backup
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(watchlist, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `NEURAL_ANIME_BACKUP_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            appendLog('BACKUP GENERATED: Downloaded JSON watchlist export.');
+        }
+
+        // Toggle Scanline FX
+        function toggleScanlines() {
+            const el = document.getElementById('scanline-overlay');
+            if (el) el.classList.toggle('hidden');
+        }
+
+        // App Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            appendLog('SYS_INIT: Neural Terminal Anime Tracker online.');
+            appendLog(`DATABASE LOADED: ${watchlist.length} targets active.`);
+            renderAll();
+        });
+    </script>
+</body>
+</html>
